@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>小学館 辞書検索</title>
+  <meta name="description" content="コトバンク収録・小学館辞書専用の検索アプリ" />
+  <meta name="theme-color" content="#1a1208" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="小学館辞書" />
+  <link rel="apple-touch-icon" href="icon-192.png" />
+  <link rel="manifest" href="manifest.json" />
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --ink:    #1a1208;
+      --gold:   #c4a35a;
+      --gold2:  #e8c87a;
+      --cream:  #faf8f3;
+      --paper:  #f4efe4;
+      --border: #ddd0b8;
+      --muted:  #8a7050;
+      --text:   #2a1e10;
+      --notion: #000000;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      background: var(--cream);
+      color: var(--text);
+      font-family: 'Hiragino Mincho ProN', 'Yu Mincho', 'Noto Serif JP', 'Times New Roman', Georgia, serif;
+      min-height: 100vh;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    body::before {
+      content: '';
+      position: fixed; inset: 0; z-index: 0; pointer-events: none;
+      background-image:
+        repeating-linear-gradient(0deg, transparent, transparent 39px, rgba(196,163,90,0.07) 40px),
+        repeating-linear-gradient(90deg, transparent, transparent 39px, rgba(196,163,90,0.04) 40px);
+    }
+
+    #app {
+      position: relative; z-index: 1;
+      max-width: 720px;
+      margin: 0 auto;
+      padding: 40px 20px 80px;
+      padding-bottom: calc(80px + env(safe-area-inset-bottom));
+    }
+
+    header {
+      display: flex; align-items: center; gap: 18px;
+      padding-bottom: 24px; margin-bottom: 32px;
+      border-bottom: 1px solid var(--border);
+      position: relative;
+    }
+    header::after {
+      content: ''; position: absolute; bottom: -3px; left: 0;
+      width: 60px; height: 2px; background: var(--gold);
+    }
+
+    .logo {
+      width: 54px; height: 54px;
+      background: var(--ink); color: var(--gold);
+      font-size: 26px; font-weight: 900;
+      display: flex; align-items: center; justify-content: center;
+      border-radius: 6px; flex-shrink: 0;
+      box-shadow: 0 4px 16px rgba(196,163,90,0.25), inset 0 1px 0 rgba(255,255,255,0.1);
+    }
+    .header-text h1 { font-size: 21px; font-weight: 700; color: var(--ink); letter-spacing: 0.06em; }
+    .header-text p  { font-size: 11px; color: var(--muted); margin-top: 4px; letter-spacing: 0.12em; }
+
+    .section-label {
+      font-size: 10px; font-weight: 700; color: var(--muted);
+      letter-spacing: 0.2em; text-transform: uppercase; margin-bottom: 12px;
+    }
+
+    .dict-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+      gap: 8px; margin-bottom: 28px;
+    }
+
+    .dict-chip {
+      display: flex; flex-direction: column;
+      padding: 10px 13px; border-radius: 4px;
+      border: 1.5px solid var(--border); background: #fff;
+      cursor: pointer; transition: all 0.18s; text-align: left; font-family: inherit;
+    }
+    .dict-chip:hover { border-color: var(--gold); }
+    .dict-chip.active { border-color: var(--gold); background: var(--ink); }
+    .dict-chip .chip-name { font-size: 12px; font-weight: 700; color: var(--text); line-height: 1.4; transition: color 0.18s; }
+    .dict-chip.active .chip-name { color: var(--gold2); }
+    .dict-chip .chip-desc { font-size: 10px; color: var(--muted); margin-top: 3px; line-height: 1.3; transition: color 0.18s; }
+    .dict-chip.active .chip-desc { color: rgba(232,200,122,0.6); }
+
+    .search-wrap { display: flex; gap: 10px; margin-bottom: 8px; }
+
+    #search-input {
+      flex: 1; padding: 14px 18px; font-size: 17px; font-family: inherit;
+      border: 2px solid var(--border); border-radius: 4px;
+      background: #fff; color: var(--ink); outline: none;
+      transition: border-color 0.18s;
+      box-shadow: inset 0 1px 3px rgba(0,0,0,0.04);
+    }
+    #search-input:focus { border-color: var(--gold); }
+    #search-input::placeholder { color: #c0aa88; }
+
+    #search-btn {
+      padding: 14px 26px; background: var(--ink); color: var(--gold);
+      border: none; border-radius: 4px; font-size: 14px; font-weight: 700;
+      font-family: inherit; cursor: pointer; letter-spacing: 0.1em;
+      transition: opacity 0.15s, transform 0.1s; min-width: 76px;
+    }
+    #search-btn:active { transform: scale(0.97); }
+    #search-btn:disabled { opacity: 0.4; cursor: default; }
+
+    .hint { font-size: 11px; color: var(--muted); margin-bottom: 28px; letter-spacing: 0.05em; }
+
+    #results { display: flex; flex-direction: column; gap: 0; }
+
+    .results-header {
+      display: flex; align-items: baseline; gap: 12px;
+      padding-bottom: 14px; margin-bottom: 16px;
+      border-bottom: 1px solid var(--border);
+    }
+    .results-word  { font-size: 24px; font-weight: 700; color: var(--ink); }
+    .results-meta  { font-size: 12px; color: var(--muted); }
+
+    .dict-card {
+      border: 1.5px solid var(--border); border-radius: 6px;
+      background: #fff; margin-bottom: 12px; overflow: hidden;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+      animation: slideIn 0.25s ease forwards; opacity: 0;
+    }
+    @keyframes slideIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .card-head {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 13px 16px; background: var(--paper); border-bottom: 1px solid var(--border);
+    }
+    .card-head-left { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+
+    .dict-badge {
+      font-size: 11px; font-weight: 700; padding: 3px 10px;
+      background: var(--ink); color: var(--gold); border-radius: 2px; letter-spacing: 0.05em;
+    }
+    .publisher-badge {
+      font-size: 10px; color: var(--muted);
+      border: 1px solid var(--border); padding: 2px 7px; border-radius: 2px;
+    }
+
+    .card-links {
+      display: flex; flex-wrap: wrap; gap: 8px; padding: 14px 16px;
+    }
+
+    .link-btn {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 10px 16px; border-radius: 4px;
+      font-size: 13px; font-weight: 600; font-family: inherit;
+      text-decoration: none; cursor: pointer;
+      transition: all 0.15s; letter-spacing: 0.03em; border: 1.5px solid;
+    }
+    .link-btn-primary { background: var(--ink); color: var(--gold2); border-color: var(--ink); }
+    .link-btn-primary:hover { background: #2e2010; border-color: #2e2010; }
+    .link-btn-secondary { background: #fff; color: var(--text); border-color: var(--border); }
+    .link-btn-secondary:hover { border-color: var(--gold); color: var(--ink); }
+
+    /* Notion保存ボタン */
+    .link-btn-notion {
+      background: #fff; color: #000;
+      border-color: #ddd;
+      font-size: 12px;
+    }
+    .link-btn-notion:hover { border-color: #000; }
+    .link-btn-notion.saved { background: #f0fdf4; color: #16a34a; border-color: #86efac; cursor: default; }
+    .link-btn-notion.saving { opacity: 0.6; cursor: default; }
+    .link-btn-notion.error  { background: #fff0f0; color: #c04040; border-color: #fca5a5; cursor: default; }
+
+    .notion-icon { font-size: 13px; }
+
+    .card-citation {
+      display: flex; align-items: center; flex-wrap: wrap; gap: 6px;
+      padding: 9px 16px; background: var(--paper); border-top: 1px solid var(--border);
+      font-size: 11px; color: var(--muted);
+    }
+    .card-citation strong { color: #3a2010; }
+
+    footer {
+      margin-top: 48px; text-align: center; font-size: 11px; color: #b09070;
+      letter-spacing: 0.08em; border-top: 1px solid var(--border); padding-top: 20px;
+    }
+
+    ::-webkit-scrollbar { width: 5px; }
+    ::-webkit-scrollbar-track { background: var(--paper); }
+    ::-webkit-scrollbar-thumb { background: var(--gold); border-radius: 3px; }
+  </style>
+</head>
+<body>
+<div id="app">
+
+  <header>
+    <div class="logo">小</div>
+    <div class="header-text">
+      <h1>小学館 辞書検索</h1>
+      <p>コトバンク収録｜小学館辞書専用</p>
+    </div>
+  </header>
+
+  <p class="section-label">使用する辞書を選択</p>
+  <div class="dict-grid" id="dict-grid"></div>
+
+  <div class="search-wrap">
+    <input type="text" id="search-input" placeholder="語句を入力（例：春、democracy）" autocomplete="off" />
+    <button id="search-btn">検索</button>
+  </div>
+  <p class="hint">※ コトバンクのページが開きます｜📓 ボタンでNotionに記録</p>
+
+  <div id="results"></div>
+
+  <footer>出典：小学館（コトバンク収録辞書）</footer>
+</div>
+
+<script>
+const DICTS = [
+  { id:"daijisen",       name:"デジタル大辞泉",            desc:"約30万語・国語辞典",   searchUrl: w=>`https://kotobank.jp/word/${enc(w)}#daijisen`,       dictUrl:"https://kotobank.jp/dictionary/daijisen/",       note:"現代語・古語を幅広く収録" },
+  { id:"daijisenplus",   name:"デジタル大辞泉プラス",      desc:"固有名詞・約10万語",   searchUrl: w=>`https://kotobank.jp/word/${enc(w)}#daijisenplus`,   dictUrl:"https://kotobank.jp/dictionary/daijisenplus/",   note:"作品名・人名など固有名詞に強い" },
+  { id:"nipponica",      name:"日本大百科全書（ニッポニカ）",desc:"百科事典・約14万語", searchUrl: w=>`https://kotobank.jp/word/${enc(w)}#nipponica`,      dictUrl:"https://kotobank.jp/dictionary/nipponica/",      note:"専門的な解説・図版が充実" },
+  { id:"nihonkokugo",    name:"精選版 日本国語大辞典",     desc:"約30万語・国語辞典",   searchUrl: w=>`https://kotobank.jp/word/${enc(w)}#nihonkokugo`,    dictUrl:"https://kotobank.jp/dictionary/nihonkokugo/",    note:"豊富な用例・語誌情報" },
+  { id:"progressive_ej", name:"プログレッシブ英和中辞典",  desc:"英和辞典（第5版）",    searchUrl: w=>`https://kotobank.jp/ejword/${enc(w)}`,              dictUrl:"https://kotobank.jp/dictionary/progressive_ej/", note:"英語→日本語" },
+  { id:"progressive_je", name:"プログレッシブ和英中辞典",  desc:"和英辞典（第4版）",    searchUrl: w=>`https://kotobank.jp/jeword/${enc(w)}`,              dictUrl:"https://kotobank.jp/dictionary/progressive_je/", note:"日本語→英語" },
+];
+
+function enc(w) { return encodeURIComponent(w); }
+function esc(s) { return s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;"); }
+
+const selected = Object.fromEntries(DICTS.map(d=>[d.id,true]));
+
+// 辞書チップ描画
+const grid = document.getElementById("dict-grid");
+DICTS.forEach(d => {
+  const btn = document.createElement("button");
+  btn.className = "dict-chip active";
+  btn.dataset.id = d.id;
+  btn.innerHTML = `<span class="chip-name">${d.name}</span><span class="chip-desc">${d.desc}</span>`;
+  btn.addEventListener("click", () => {
+    selected[d.id] = !selected[d.id];
+    btn.classList.toggle("active", selected[d.id]);
+  });
+  grid.appendChild(btn);
+});
+
+// Notionに保存
+async function saveToNotion(btn, word, dictName, url) {
+  btn.classList.add("saving");
+  btn.textContent = "保存中…";
+  try {
+    const res = await fetch("/.netlify/functions/save-word", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ word, dictName, url }),
+    });
+    if (res.ok) {
+      btn.classList.remove("saving");
+      btn.classList.add("saved");
+      btn.innerHTML = `<span>✓</span> Notionに保存済み`;
+    } else {
+      throw new Error();
+    }
+  } catch {
+    btn.classList.remove("saving");
+    btn.classList.add("error");
+    btn.innerHTML = `<span>✗</span> 保存失敗`;
+    setTimeout(() => {
+      btn.classList.remove("error");
+      btn.innerHTML = `<span class="notion-icon">📓</span> Notionに記録`;
+    }, 2500);
+  }
+}
+
+// 検索
+function search() {
+  const word = document.getElementById("search-input").value.trim();
+  if (!word) return;
+  const active = DICTS.filter(d => selected[d.id]);
+  const resultsEl = document.getElementById("results");
+
+  if (!active.length) {
+    resultsEl.innerHTML = `<div style="text-align:center;padding:40px;color:var(--muted);font-size:14px;">辞書を1つ以上選択してください。</div>`;
+    return;
+  }
+
+  let html = `
+    <div class="results-header">
+      <span class="results-word">「${esc(word)}」</span>
+      <span class="results-meta">${active.length}件の辞書で検索</span>
+    </div>`;
+
+  active.forEach((d, i) => {
+    const kotobankUrl = d.searchUrl(word);
+    html += `
+      <div class="dict-card" style="animation-delay:${i*0.06}s">
+        <div class="card-head">
+          <div class="card-head-left">
+            <span class="dict-badge">${d.name}</span>
+            <span class="publisher-badge">小学館</span>
+          </div>
+        </div>
+        <div class="card-links">
+          <a class="link-btn link-btn-primary"
+             href="${kotobankUrl}" target="_blank" rel="noopener noreferrer">
+            🔍 「${esc(word)}」をコトバンクで調べる
+          </a>
+          <a class="link-btn link-btn-secondary"
+             href="${d.dictUrl}" target="_blank" rel="noopener noreferrer">
+            📖 辞書トップページ
+          </a>
+          <button class="link-btn link-btn-notion"
+            data-word="${esc(word)}" data-dict="${esc(d.name)}" data-url="${esc(kotobankUrl)}">
+            <span class="notion-icon">📓</span> Notionに記録
+          </button>
+        </div>
+        <div class="card-citation">
+          <span>📌</span>
+          <span>出典：<strong>${d.name}</strong>（小学館）</span>
+          <span style="color:var(--gold)">｜</span>
+          <span>${d.note}</span>
+        </div>
+      </div>`;
+  });
+
+  resultsEl.innerHTML = html;
+
+  // Notion保存ボタンにイベントを付ける
+  resultsEl.querySelectorAll(".link-btn-notion").forEach(btn => {
+    btn.addEventListener("click", () => {
+      if (btn.classList.contains("saved") || btn.classList.contains("saving")) return;
+      saveToNotion(btn, btn.dataset.word, btn.dataset.dict, btn.dataset.url);
+    });
+  });
+}
+
+document.getElementById("search-btn").addEventListener("click", search);
+document.getElementById("search-input").addEventListener("keydown", e => {
+  if (e.key === "Enter") search();
+});
+</script>
+
+<script>
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/sw.js').catch(()=>{});
+  });
+}
+</script>
+</body>
+</html>
