@@ -5,12 +5,16 @@ exports.handler = async function (event) {
 
   const { word, dictName, url } = JSON.parse(event.body || "{}");
 
-  if (!word || !dictName) {
-    return { statusCode: 400, body: "Missing fields" };
-  }
-
   const NOTION_TOKEN = process.env.NOTION_TOKEN;
   const NOTION_DB_ID = process.env.NOTION_DB_ID;
+
+  // デバッグ用：トークンとDBIDの先頭だけ返す
+  if (!NOTION_TOKEN) {
+    return { statusCode: 500, body: "NOTION_TOKEN is missing" };
+  }
+  if (!NOTION_DB_ID) {
+    return { statusCode: 500, body: "NOTION_DB_ID is missing" };
+  }
 
   const res = await fetch("https://api.notion.com/v1/pages", {
     method: "POST",
@@ -38,10 +42,10 @@ exports.handler = async function (event) {
     }),
   });
 
+  const responseText = await res.text();
+
   if (!res.ok) {
-    const err = await res.text();
-    console.error("Notion error:", err);
-    return { statusCode: 500, body: "Notion API error" };
+    return { statusCode: 500, body: `Notion error: ${responseText}` };
   }
 
   return { statusCode: 200, body: JSON.stringify({ ok: true }) };
