@@ -1,16 +1,16 @@
 <!DOCTYPE html>
-<!-- saved from url=(0041)file:///Users/user/Downloads/index_1.html -->
-<html lang="ja"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-  
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <title>小学館 辞書検索</title>
-  <meta name="description" content="コトバンク収録・小学館辞書専用の検索アプリ">
-  <meta name="theme-color" content="#1a1208">
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <meta name="apple-mobile-web-app-title" content="小学館辞書">
-  <link rel="apple-touch-icon" href="file:///Users/user/Downloads/icon-192.png">
-  <link rel="manifest" href="file:///Users/user/Downloads/manifest.json">
+  <meta name="description" content="コトバンク収録・小学館辞書専用の検索アプリ" />
+  <meta name="theme-color" content="#1a1208" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="小学館辞書" />
+  <link rel="apple-touch-icon" href="icon-192.png" />
+  <link rel="manifest" href="manifest.json" />
 
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -216,10 +216,10 @@
   </header>
 
   <p class="section-label">使用する辞書を選択</p>
-  <div class="dict-grid" id="dict-grid"><button class="dict-chip active" data-id="daijisen"><span class="chip-name">デジタル大辞泉</span><span class="chip-desc">約30万語・国語辞典</span></button><button class="dict-chip active" data-id="daijisenplus"><span class="chip-name">デジタル大辞泉プラス</span><span class="chip-desc">固有名詞・約10万語</span></button><button class="dict-chip active" data-id="nipponica"><span class="chip-name">日本大百科全書（ニッポニカ）</span><span class="chip-desc">百科事典・約14万語</span></button><button class="dict-chip active" data-id="nihonkokugo"><span class="chip-name">精選版 日本国語大辞典</span><span class="chip-desc">約30万語・国語辞典</span></button><button class="dict-chip active" data-id="progressive_ej"><span class="chip-name">プログレッシブ英和中辞典</span><span class="chip-desc">英和辞典（第5版）</span></button><button class="dict-chip active" data-id="progressive_je"><span class="chip-name">プログレッシブ和英中辞典</span><span class="chip-desc">和英辞典（第4版）</span></button></div>
+  <div class="dict-grid" id="dict-grid"></div>
 
   <div class="search-wrap">
-    <input type="text" id="search-input" placeholder="語句を入力（例：春、democracy）" autocomplete="off">
+    <input type="text" id="search-input" placeholder="語句を入力（例：春、democracy）" autocomplete="off" />
     <button id="search-btn">検索</button>
   </div>
   <p class="hint">※ コトバンクのページが開きます｜📓 ボタンでNotionに記録</p>
@@ -361,6 +361,5 @@ if ('serviceWorker' in navigator) {
   });
 }
 </script>
-
-
-</body></html>
+</body>
+</html>
